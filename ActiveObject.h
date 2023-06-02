@@ -8,31 +8,31 @@
 #include <thread>
 #include "random"
 #include <iostream>
+
 using namespace std;
-
-
 class ActiveObject {
 private:
     Queue myQueue ;
     void (*functionPtr)(void*);
-    thread myThread ;
 public:
+    thread myThread ;
+
     class Task{
     public:
         Task(int* num, ActiveObject* next, int* seed = nullptr): num(num), next(next), seed(seed) {}
         ActiveObject* next ;
         int* num ;
         int* seed ;
+
     };
     ActiveObject* next ;
 
-    ActiveObject(void (*func)(void*)): functionPtr(func), myThread(&ActiveObject::busyLoop, this){}
+    ActiveObject(void (*func)(void*)): functionPtr(func), myThread(&ActiveObject::busyLoop, this), next(nullptr){
+    }
 
     void busyLoop(){
         void* task ;
         while((task=this->myQueue.deQueue())) {
-            cout<< "shit!" << endl ;
-
             functionPtr(task);
         }
     }
@@ -40,7 +40,7 @@ public:
 
 
 
-    Queue getQueue(){
+    Queue& getQueue(){
         return myQueue ;
     }
 
@@ -49,9 +49,9 @@ public:
     }
 };
 
-int* generateRandomNumbers(std::mt19937_64 rng) {
+int* generateRandomNumbers(std::mt19937_64* rng) {
     std::uniform_int_distribution<int> distribution(100000, 999999);  // Range of 6-digit numbers
-    return new int(distribution(rng));
+    return new int(distribution(*rng));
 }
 
 
@@ -72,16 +72,20 @@ int isPrime(int num){
 
 void func0(void* arg){
     ActiveObject::Task* task = static_cast<ActiveObject::Task*>(arg) ;
+    cout << "func 0! n: " << *task->num << " seed: " << *task->seed << endl ;
     std::mt19937_64 rng(*task->seed) ;
     int* currentNum ;
     for (int i = 0; i < *task->num; ++i) {
-        currentNum = generateRandomNumbers(rng) ;
+        currentNum = generateRandomNumbers(&rng) ;
+        cout << "Generated number: " << *currentNum << endl ;
         ActiveObject::Task* newTask = new ActiveObject::Task(currentNum, task->next->next, nullptr) ;
         task->next->getQueue().enQueue(newTask) ;
+        std::this_thread::sleep_for(std::chrono::milliseconds (1));
     }
 }
 
 void func1(void* arg){
+    cout << "func 1! " << endl ;
     ActiveObject::Task* task = static_cast<ActiveObject::Task*>(arg) ;
     cout << *task->num << endl << boolalpha << isPrime(*task->num) << endl ;
     *task->num += 11 ;
@@ -91,6 +95,7 @@ void func1(void* arg){
 }
 
 void func2(void* arg){
+    cout << "func 2! " << endl ;
     ActiveObject::Task* task = static_cast<ActiveObject::Task*>(arg) ;
     cout << *task->num << endl << boolalpha << isPrime(*task->num) << endl ;
     *task->num -= 13 ;
@@ -100,6 +105,7 @@ void func2(void* arg){
 }
 
 void func3(void* arg){
+    cout << "func 3! " << endl ;
     ActiveObject::Task* task = static_cast<ActiveObject::Task*>(arg) ;
     cout << *task->num << endl ;
     *task->num += 2 ;

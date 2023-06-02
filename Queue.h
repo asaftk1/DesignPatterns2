@@ -6,15 +6,20 @@
 #define DESIGNPATTERNS2_QUEUE_H
 #include <queue>
 #include <condition_variable>
+#include <atomic>
 #include "iostream"
 using namespace std ;
+static int index = 0 ;
 class Queue {
 public:
     queue<void*> myQueue ;
     condition_variable cv ;
     mutex mtx ;
-    bool condition ;
+    std::unique_lock<std::mutex> lock ;
+    std::atomic<bool> condition ;
+    int num ;
     Queue(){
+        num = index++ ;
         condition = false ;
     } ;
     Queue(Queue const &other){
@@ -22,27 +27,21 @@ public:
     } ;
 
     void enQueue(void* element) {
-        {
-            std::lock_guard<std::mutex> lock(mtx);
-            myQueue.push(element);
-            condition = true;
-        }
+        myQueue.push(element);
         cv.notify_all();
-        cout << "shitassBiatch!" << boolalpha << condition << endl;
+//        cout << "Enqueued to q number " << num << " Size: " << myQueue.size() << endl;
     }
 
     void* deQueue() {
-        std::unique_lock<std::mutex> lock(mtx);
-        cv.wait(lock, [this] { return condition; });
-
+//        cout << "Queue " << num << "waiting with size: " << myQueue.size() << endl ;
+        lock = std::unique_lock<std::mutex>(mtx);
+        cv.wait(lock, [this] {
+            return !myQueue.empty() ;
+        });
+//        cout << "Continue with queue: " << num << endl ;
         void* element = myQueue.front();
         myQueue.pop();
-        condition = !myQueue.empty();
-        lock.unlock();
-        cv.notify_all();
-
-        cout << "EMpty? " << boolalpha << myQueue.empty() << endl;
-
+        lock.unlock() ;
         return element;
     }
     void setCondition(bool val){

@@ -27,9 +27,12 @@ public:
         objects[1]->next = objects[2] ;
         objects[2]->next = objects[3] ;
         auto newTask = new ActiveObject::Task(&n, objects[1], &seed) ;
-        std::this_thread::sleep_for(std::chrono::seconds(2));
         objects[0]->getQueue().enQueue(newTask) ;
         objects[0]->getQueue().setCondition(true) ;
+        for (auto& obj : objects) {
+            obj->myThread.join();
+        }
+
     }
 };
 
