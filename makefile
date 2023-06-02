@@ -1,15 +1,18 @@
 CXX=clang++-14
 
-all: main
+all: st_pipeline
 
-main: main.cpp st_pipeline
-	$(CXX) -o main main.cpp -pthread
+st_pipeline: st_pipeline.o ActiveObject.o Queue.o
+	$(CXX) -o st_pipeline st_pipeline.o ActiveObject.o Queue.o -pthread
 
-st_pipeline: st_pipeline.h ActiveObject
-	$(CXX) -o st_pipeline st_pipeline.h
+st_pipeline.o: st_pipeline.cpp st_pipeline.hpp ActiveObject.o
+	$(CXX) -c st_pipeline.cpp -o st_pipeline.o
 
-ActiveObject: ActiveObject.h Queue
-	$(CXX) -o ActiveObject ActiveObject.h
+ActiveObject.o: ActiveObject.hpp ActiveObject.cpp Queue.o
+	$(CXX) -c ActiveObject.cpp -o ActiveObject.o
 
-Queue: Queue.h
-	$(CXX) -o Queue Queue.h
+Queue.o: Queue.hpp Queue.cpp
+	$(CXX) -c Queue.cpp -o Queue.o
+
+clean:
+	rm -f st_pipeline st_pipeline.o ActiveObject.o Queue.o
