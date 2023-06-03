@@ -10,48 +10,50 @@
 #include <iostream>
 
 using namespace std;
-class ActiveObject {
+class ActiveObject
+{
 private:
-    Queue myQueue ;
-    bool isOn ;
-    void (*functionPtr)(void*);
+    Queue myQueue;
+    bool isOn;
+    void (*functionPtr)(void *);
 
 public:
-    thread myThread ;
+    thread myThread;
+    
 
-    class Task{
+    class Task
+    {
     public:
-        Task(int* num, ActiveObject* next, int* seed = nullptr) ;
-        ActiveObject* next ;
-        int* num ;
-        int* seed ;
-
+        Task(int *num, ActiveObject *next, int *seed = nullptr);
+        ActiveObject *next;
+        int *num;
+        int *seed;
     };
 
-    ActiveObject* next ;
+    ActiveObject *next;
 
-    ActiveObject(void (*func)(void*)) ;
+    ActiveObject(void (*func)(void *));
 
-    void busyLoop() ;
+    void busyLoop();
 
-    Queue& getQueue() ;
+    Queue &getQueue();
 
-    static ActiveObject* CreateActiveObject(void (*func)(void*)) ;
+    static ActiveObject *CreateActiveObject(void (*func)(void *));
 
-    static void stop(ActiveObject*) ;
+    static void stop(ActiveObject *);
+    void stopAll();
 };
 
-int* generateRandomNumbers(std::mt19937_64* rng) ;
+int *generateRandomNumbers(std::mt19937_64 *rng);
 
+int isPrime(int num);
 
-int isPrime(int num) ;
+void func0(void *arg);
 
-void func0(void* arg) ;
+void func1(void *arg);
 
-void func1(void* arg) ;
+void func2(void *arg);
 
-void func2(void* arg) ;
+void func3(void *arg);
 
-void func3(void* arg) ;
-
-#endif //DESIGNPATTERNS2_ACTIVEOBJECT_HPP
+#endif // DESIGNPATTERNS2_ACTIVEOBJECT_HPP
